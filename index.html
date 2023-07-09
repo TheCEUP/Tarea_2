@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do List</title>
+</head>
+<body>
+    <h2>Add Task</h2>
+    <input type="text" id="title" placeholder="Title">
+    <input type="text" id="description" placeholder="Description">
+    <button id="add-task">Add</button>
+
+    <h2>Task List</h2>
+    <ul id="task-list"></ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+
+            var addBtn = document.getElementById('add-task');
+            addBtn.addEventListener('click', function() {
+                addTask();
+            });
+        });
+
+        function loadTasks() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost/backend.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var xmlDoc = xhr.responseXML;
+                    var tasks = xmlDoc.getElementsByTagName('task');
+
+                    var taskList = document.getElementById('task-list');
+                    taskList.innerHTML = '';
+
+                    for (var i = 0; i < tasks.length; i++) {
+                        var task = tasks[i];
+
+                        var title = task.getElementsByTagName('title')[0].textContent;
+                        var description = task.getElementsByTagName('description')[0].textContent;
+
+                        var listItem = document.createElement('li');
+                        listItem.innerHTML = '<strong>' + title + '</strong>: ' + description;
+
+                        var deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.addEventListener('click', function() {
+                            deleteTask(task);
+                        });
+
+                        listItem.appendChild(deleteButton);
+                        taskList.appendChild(listItem);
+                    }
+                }
+            };
+
+            xhr.send();
+        }
+
+        function addTask() {
+            var title = document.getElementById('title').value;
+            var description = document.getElementById('description').value;
+
+            var data = 'title=' + encodeURIComponent(title) + '&description=' + encodeURIComponent(description);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost/backend.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    loadTasks();
+
+                    document.getElementById('title').value = '';
+                    document.getElementById('description').value = '';
+                }
+            };
+
+            xhr.send(data);
+        }
+
+        function deleteTask(task) {
+            var id = task.getElementsByTagName('id')[0].textContent;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('DELETE', 'http://localhost/backend.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    loadTasks();
+                }
+            };
+
+            xhr.send('id=' + encodeURIComponent(id));
+        }
+    </script>
+</body>
+</html>
